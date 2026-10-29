@@ -1,0 +1,47 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+       background: #f2f4f8; color: #1b1f2a; }
+h1, h2 { margin: 0; }
+h2 { font-size: 18px; margin-bottom: 12px; }
+.muted { color: #7a8194; margin: 4px 0; }
+.small { font-size: 13px; }
+
+.top { background: linear-gradient(135deg, #5b3df5, #2f80ed); color: #fff;
+       padding: 32px 20px 56px; border-radius: 0 0 28px 28px; text-align: center; }
+.top .muted { color: rgba(255,255,255,.8); }
+.best { font-size: 44px; font-weight: 700; margin: 8px 0; }
+.best span { font-size: 16px; font-weight: 400; opacity: .85; }
+
+main { max-width: 640px; margin: -32px auto 0; padding: 0 16px 32px; }
+.card { background: #fff; border-radius: 18px; padding: 16px;
+        box-shadow: 0 4px 16px rgba(30,40,80,.08); margin-bottom: 12px; }
+
+.calc input { width: 100%; font-size: 22px; padding: 12px 14px; margin: 8px 0;
+              border: 1.5px solid #dfe3ec; border-radius: 12px; }
+.calc input:focus { outline: none; border-color: #5b3df5; }
+.result { font-size: 18px; margin: 8px 0 0; }
+
+.bank { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.name { font-weight: 600; }
+.sell { font-size: 24px; font-weight: 700; text-align: right; }
+.is-best { border: 2px solid #1fb57a; }
+.is-best .sell { color: #1fb57a; }
+.badge { background: #e5f8ef; color: #1fb57a; font-size: 12px; font-weight: 600;
+         padding: 3px 8px; border-radius: 20px; margin-left: 6px; }
+.note { text-align: center; }
+[hidden] { display: none !important; }
+.bank { display: block; }
+.bank-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.addr-btn { margin-top: 6px; padding: 6px 12px; border: 0; border-radius: 20px;
+            background: #eef0fb; color: #5b3df5; font-size: 13px; font-weight: 600; cursor: pointer; }
+.branches { list-style: none; margin: 12px 0 0; padding: 12px 0 0; border-top: 1px solid #eceff5; }
+.branches li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; font-size: 14px; }
+.branches li b { white-space: nowrap; }
+.branches li.more { color: #5b3df5; font-weight: 600; cursor: pointer; justify-content: flex-start; }
+.tabs { display: inline-flex; background: rgba(255,255,255,.18); border-radius: 24px;
+        padding: 4px; margin-bottom: 14px; }
+.tab { color: #fff; text-decoration: none; padding: 8px 18px; border-radius: 20px;
+       font-weight: 600; font-size: 14px; }
+.tab.active { background: #fff; color: #5b3df5; }
+.branches a { color: #5b3df5; font-weight: 600; }
+.bank.disabled { opacity: .55; }

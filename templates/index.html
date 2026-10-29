@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Курс USD в Минске</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="top">
+    <div class="tabs">
+      <a class="tab {{ 'active' if mode == 'buy' }}" href="/?mode=buy">Купить USD</a>
+      <a class="tab {{ 'active' if mode == 'sell' }}" href="/?mode=sell">Продать USD</a>
+    </div>
+    <p class="muted">{{ 'Купить доллары в Минске' if mode == 'buy' else 'Продать доллары в Минске' }}</p>
+    <h1>{{ 'Лучший курс' if mode == 'buy' else 'Лучший курс приёма' }}</h1>
+    <div class="best">{{ "%.3f"|format(best) }} <span>BYN за 1 USD</span></div>
+    <p class="muted">{{ banks[0].bank }}</p>
+    <p class="muted small">Обновлено в {{ updated }} · <a href="/refresh?mode={{ mode }}" style="color:#fff">обновить сейчас</a></p>
+  </header>
+
+  <main>
+    <section class="card calc">
+      <h2>Калькулятор</h2>
+      <label>{{ 'Сколько долларов нужно' if mode == 'buy' else 'Сколько долларов продаёте' }}</label>
+      <input id="usd" type="number" min="0" value="100" inputmode="decimal">
+      <p class="result">{{ 'Понадобится' if mode == 'buy' else 'Получите' }}: <b id="byn">0</b> BYN</p>
+      <p class="muted" id="save"></p>
+    </section>
+
+    <section class="list">
+      <h2>Все банки</h2>
+      {% for b in banks %}
+      <div class="card bank {{ 'is-best' if loop.first }}" data-alias="{{ b.alias }}">
+        <div class="bank-head">
+          <div>
+            <div class="name">{{ b.bank }} {% if loop.first %}<span class="badge">лучший</span>{% endif %}</div>
+            <button class="addr-btn" type="button">Показать адреса</button>
+          </div>
+          <div class="rate">
+            <div class="sell">{{ "%.3f"|format(b[field]) }}</div>
+            <div class="muted small">{{ 'банк продаёт' if mode == 'buy' else 'банк покупает' }}</div>
+          </div>
+        </div>
+        <ul class="branches" hidden></ul>
+      </div>
+                {% endfor %}
+      {% for b in extra %}
+      <div class="card bank disabled">
+        <div class="bank-head">
+          <div>
+            <div class="name">{{ b.bank }}</div>
+            <div class="muted small">Нет отделений для физлиц в Минске</div>
+          </div>
+          <div class="rate">
+            <div class="sell">{{ "%.3f"|format(b[field]) }}</div>
+            <div class="muted small">{{ 'банк продаёт' if mode == 'buy' else 'банк покупает' }}</div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </section>
+
+    <p class="muted small note">Курсы справочные. Перед визитом уточните курс в отделении по телефону.</p>
+  </main>
+
+  <script>
+    const MODE = {{ mode|tojson }};
+    const best = {{ best|tojson }};
+    const worst = {{ worst|tojson }};
+    const input = document.getElementById('usd');
+    function calc() {
+      const usd = parseFloat(input.value) || 0;
+      document.getElementById('byn').textContent = (usd * best).toFixed(2);
+      const diff = usd * Math.abs(best - worst);
+      document.getElementById('save').textContent =
+        diff > 0 ? 'Выгода против худшего банка: ' + diff.toFixed(2) + ' BYN' : '';
+    }
+    input.addEventListener('input', calc);
+    calc();
+
+    // адреса отделений по клику
+    const LIMIT = 5;
+    function render(list, items, alias) {
+      list.innerHTML = '';
+           if (!items.length) {
+        const li = document.createElement('li');
+        li.className = 'muted';
+        li.append('У этого банка нет списка отделений в Минске. ');
+        const a = document.createElement('a');
+        a.href = 'https://myfin.by/bank/' + alias + '/usd';
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.textContent = 'Открыть на myfin';
+        li.appendChild(a);
+        list.appendChild(li);
+        return;
+      }
+      items.forEach((it, i) => {
+        const li = document.createElement('li');
+        const addr = document.createElement('span');
+        addr.textContent = it.address;
+        const rate = document.createElement('b');
+        rate.textContent = it.rate.toFixed(3);
+        li.append(addr, rate);
+        if (i >= LIMIT) li.hidden = true;
+        list.appendChild(li);
+      });
+      if (items.length > LIMIT) {
+        const more = document.createElement('li');
+        more.className = 'more';
+        more.textContent = 'Показать все (' + items.length + ')';
+        more.addEventListener('click', () => {
+          list.querySelectorAll('li[hidden]').forEach(x => x.hidden = false);
+          more.remove();
+        });
+        list.appendChild(more);
+      }
+    }
+
+    document.querySelectorAll('.bank:not(.disabled)').forEach(card => {
+      const btn = card.querySelector('.addr-btn');
+      const list = card.querySelector('.branches');
+      let loaded = false;
+      btn.addEventListener('click', async () => {
+        if (!list.hidden) {
+          list.hidden = true;
+          btn.textContent = 'Показать адреса';
+          return;
+        }
+        list.hidden = false;
+        btn.textContent = 'Скрыть адреса';
+        if (loaded) return;
+        list.innerHTML = '<li class="muted">Загружаю…</li>';
+        try {
+          const resp = await fetch('/branches/' + card.dataset.alias + '?mode=' + MODE);
+          if (!resp.ok) throw new Error('bad status');
+          render(list, await resp.json(), card.dataset.alias);
+          loaded = true;
+        } catch (e) {
+          list.innerHTML = '<li class="muted">Не удалось загрузить адреса. Попробуйте позже.</li>';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
